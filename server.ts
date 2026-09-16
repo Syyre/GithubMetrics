@@ -1,5 +1,10 @@
 import express, { type Express, type Request, type Response } from "express";
 import "dotenv/config";
+import {
+  getUser,
+  getUserRepos,
+  getLanguages,
+} from "./services/githubService.ts";
 
 const PORT = 3000;
 const app: Express = express();
@@ -35,14 +40,11 @@ app.get("/", (req: Request, res: Response) => {
 //http://localhost:3000/api/github/Syyre
 app.get("/api/github/:username", async (req: Request, res: Response) => {
   const username = req.params.username;
-
-  const response = await fetch(`https://api.github.com/users/${username}`);
-
-  if (!response.ok) {
-    return res.status(response.status).json({ error: "User not found" });
+  if (typeof username !== "string" || username.trim() === "") {
+    return res.status(400).json({ error: "Invalid username" });
   }
 
-  const data = await response.json();
+  const data = await getUser(username);
 
   res.json({
     username: data.login,
@@ -60,25 +62,11 @@ app.get("/api/github/:username", async (req: Request, res: Response) => {
 //http://localhost:3000/api/github/Syyre/repos
 app.get("/api/github/:username/repos", async (req: Request, res: Response) => {
   const username = req.params.username;
-  if (!process.env.GITHUB_TOKEN) {
-    throw new Error("GITHUB_TOKEN is not defined");
-  }
-  const response = await fetch(
-    `https://api.github.com/users/${username}/repos`,
-    {
-      headers: {
-        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-        Accept: "application/vnd.github+json",
-      },
-    },
-  );
-  console.log(response.status);
-
-  if (!response.ok) {
-    return res.status(response.status).json({ error: "User not found" });
+  if (typeof username !== "string" || username.trim() === "") {
+    return res.status(400).json({ error: "Invalid username" });
   }
 
-  const data = await response.json();
+  const data = await getUserRepos(username);
 
   const repos = data.map((repo: any) => ({
     name: repo.name,
@@ -98,39 +86,44 @@ app.get("/api/github/:username/repos", async (req: Request, res: Response) => {
 app.get(
   "/api/github/:username/metrics",
   async (req: Request, res: Response) => {
+    const languageTotals: Record<string, number> = {};
     const username = req.params.username;
-
-    const response = await fetch(
-      `https://api.github.com/users/${username}/repos`,
-    );
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: "User not found" });
+    if (typeof username !== "string" || username.trim() === "") {
+      return res.status(400).json({ error: "Invalid username" });
     }
 
-    //nameData will contain user's name and bio
-    const nameData = await response.json();
+    //userData has user name and bio
+    const userData = await getUser(username);
 
     //fetch all repos and calculate user's total language percentage
-    const reposResponse = await fetch(
-      `https://api.github.com/users/${username}/repos`,
-    );
-
-    if (!reposResponse.ok) {
-      return res.status(reposResponse.status).json({ error: "User not found" });
-    }
-
-    const reposData = await reposResponse.json();
+    const reposData = await getUserRepos(username);
 
     for (const repo of reposData) {
-      const languagesResponse = await fetch(
-        `https://api.github.com/repos/${username}/${repo.name}/languages`,
-      );
+      const languageData = await getLanguages(username, repo.name);
 
-      const languagesData = await languagesResponse.json();
-
-      console.log(`Languages for ${repo.name}:`, languagesData);
+      for (const [language, bytes] of Object.entries(languageData)) {
+        languageTotals[language] =
+          (languageTotals[language] || 0) + Number(bytes);
+      }
     }
+
+    const totalBytes = Object.values(languageTotals).reduce(
+      (acc, bytes) => acc + bytes,
+      0,
+    );
+
+    const languagePercentages = Object.fromEntries(
+      Object.entries(languageTotals).map(([language, bytes]) => [
+        language,
+        Number((bytes / totalBytes) * 100).toFixed(2),
+      ]),
+    );
+    res.json({
+      username: userData.login,
+      bio: userData.bio,
+      public_repos: userData.public_repos,
+      ...languagePercentages,
+    });
   },
 );
 
