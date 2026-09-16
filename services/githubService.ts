@@ -28,3 +28,14 @@ export async function getUserRepos(username: string) {
 export async function getLanguages(owner: string, repo: string) {
   return githubFetch(`/repos/${owner}/${repo}/languages`);
 }
+
+export async function getTotalCommits(username: string) {
+  const since = new Date();
+  since.setDate(since.getDate() - 30); // 30 days ago
+  const sinceStr = since.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+  const query = `author:${username} author-date:>=${sinceStr}`;
+  const data = await githubFetch(
+    `/search/commits?q=${encodeURIComponent(query)}`,
+  );
+  return data.total_count;
+}

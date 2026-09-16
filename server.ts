@@ -4,6 +4,7 @@ import {
   getUser,
   getUserRepos,
   getLanguages,
+  getTotalCommits,
 } from "./services/githubService.ts";
 
 const PORT = 3000;
@@ -88,17 +89,21 @@ app.get(
   async (req: Request, res: Response) => {
     const languageTotals: Record<string, number> = {};
     const username = req.params.username;
+    let starCount = 0;
+    let totalForks = 0;
+    let totalWatchers = 0;
     if (typeof username !== "string" || username.trim() === "") {
       return res.status(400).json({ error: "Invalid username" });
     }
 
-    //userData has user name and bio
     const userData = await getUser(username);
-
-    //fetch all repos and calculate user's total language percentage
     const reposData = await getUserRepos(username);
+    const totalCommits = await getTotalCommits(username);
 
     for (const repo of reposData) {
+      starCount += repo.stargazers_count;
+      totalForks += repo.forks_count;
+      totalWatchers += repo.watchers_count;
       const languageData = await getLanguages(username, repo.name);
 
       for (const [language, bytes] of Object.entries(languageData)) {
@@ -121,8 +126,12 @@ app.get(
     res.json({
       username: userData.login,
       bio: userData.bio,
-      public_repos: userData.public_repos,
-      ...languagePercentages,
+      total_public_repos: userData.public_repos,
+      total_commits_last_30_days: totalCommits,
+      total_stars: starCount,
+      total_forks: totalForks,
+      total_watchers: totalWatchers,
+      languages: { ...languagePercentages },
     });
   },
 );
