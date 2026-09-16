@@ -1,4 +1,5 @@
 import express, { type Express, type Request, type Response } from "express";
+import "dotenv/config";
 
 const PORT = 3000;
 const app: Express = express();
@@ -59,10 +60,19 @@ app.get("/api/github/:username", async (req: Request, res: Response) => {
 //http://localhost:3000/api/github/Syyre/repos
 app.get("/api/github/:username/repos", async (req: Request, res: Response) => {
   const username = req.params.username;
-
+  if (!process.env.GITHUB_TOKEN) {
+    throw new Error("GITHUB_TOKEN is not defined");
+  }
   const response = await fetch(
     `https://api.github.com/users/${username}/repos`,
+    {
+      headers: {
+        Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+        Accept: "application/vnd.github+json",
+      },
+    },
   );
+  console.log(response.status);
 
   if (!response.ok) {
     return res.status(response.status).json({ error: "User not found" });
