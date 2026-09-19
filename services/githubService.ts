@@ -2,6 +2,8 @@ import "dotenv/config";
 import { db } from "../src/prisma/db";
 const GITHUB_API_BASE_URL = "https://api.github.com";
 
+const ONE_HOUR_IN_MS = 60 * 60 * 1000;
+
 async function githubFetch(endpoint: string) {
   const response = await fetch(`${GITHUB_API_BASE_URL}${endpoint}`, {
     headers: {
@@ -18,24 +20,35 @@ async function githubFetch(endpoint: string) {
 }
 
 export async function getUser(username: string) {
-  const exisitingUser = await db.orm.public.User.select(
-    "id",
-    "username",
-    "name",
-    "bio",
-    "followers",
-    "following",
-    "public_repos",
-    "account_created_at",
-    "email",
-  )
-    .where({
-      username: username,
-    })
-    .first();
+  const exisitingUser = await db.orm.public.User.where({
+    username: username,
+  }).first();
 
   if (exisitingUser) {
-    return exisitingUser;
+    const lastUpdated = new Date(exisitingUser.UpdatedAt).getTime();
+    const isOld = Date.now() - lastUpdated > ONE_HOUR_IN_MS;
+
+    // If the user exists and is not old, return the existing user without timestamps
+    if (!isOld) {
+      const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = exisitingUser;
+      return userWithoutTimestamps;
+    }
+    const githubUser = await githubFetch(`/users/${username}`);
+
+    //update user if older than hour
+    const updated = await db.orm.public.User.where({
+      username: username,
+    }).update({
+      name: githubUser.name,
+      bio: githubUser.bio,
+      followers: githubUser.followers,
+      following: githubUser.following,
+      public_repos: githubUser.public_repos,
+      account_created_at: githubUser.created_at,
+      email: githubUser.email,
+    });
+    const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = updated!;
+    return userWithoutTimestamps;
   }
 
   const githubUser = await githubFetch(`/users/${username}`);
