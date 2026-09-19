@@ -16,15 +16,21 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "tsx watch server.ts"
+    "start": "tsx watch server.ts",
+    "postinstall": "prisma skills sync || exit 0",
+    "contract:emit": "prisma contract emit"
   },
   "devDependencies": {
+    "@prisma/cli-engine": "^0.4.0",
     "@types/express": "^5.0.6",
     "@types/node": "^26.5.1",
+    "prisma": "^8.0.0-rc.15",
     "tsx": "^4.23.13",
     "typescript": "^7.0.2"
   },
   "dependencies": {
+    "@prisma/client": "^7.10.0",
+    "@prisma/orm-postgres": "^8.0.0-rc.11",
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
   }
