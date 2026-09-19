@@ -14,30 +14,6 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello World!");
 });
 
-// const getLanguage = async (
-//   username: string,
-//   repoName: string,
-// ): Promise<string | null> => {
-//   const response = await fetch(
-//     `https://api.github.com/repos/${username}/${repoName}/languages`,
-//   );
-
-//   if (!response.ok) {
-//     return null;
-//   }
-
-//   const data = await response.json();
-//   console.log(data);
-//   const languages = Object.keys(data);
-//   return languages.length > 0 ? languages[0] : null;
-// };
-
-// console.log(
-//   getLanguage("Syyre", "MovieSearcher").then((language) => {
-//     console.log(`Primary language for Syyre/MovieSearcher: ${language}`);
-//   }),
-// );
-
 //http://localhost:3000/api/github/Syyre
 app.get("/api/github/:username", async (req: Request, res: Response) => {
   const username = req.params.username;
@@ -47,17 +23,7 @@ app.get("/api/github/:username", async (req: Request, res: Response) => {
 
   const data = await getUser(username);
 
-  res.json({
-    username: data.login,
-    name: data.name,
-    bio: data.bio,
-    public_repos: data.public_repos,
-    followers: data.followers,
-    following: data.following,
-    created_at: data.created_at,
-    email: data.email,
-    location: data.location,
-  });
+  res.json(data);
 });
 
 //http://localhost:3000/api/github/Syyre/repos
@@ -84,57 +50,57 @@ app.get("/api/github/:username/repos", async (req: Request, res: Response) => {
 });
 
 //metrics request
-app.get(
-  "/api/github/:username/metrics",
-  async (req: Request, res: Response) => {
-    const languageTotals: Record<string, number> = {};
-    const username = req.params.username;
-    let starCount = 0;
-    let totalForks = 0;
-    let totalWatchers = 0;
-    if (typeof username !== "string" || username.trim() === "") {
-      return res.status(400).json({ error: "Invalid username" });
-    }
+// app.get(
+//   "/api/github/:username/metrics",
+//   async (req: Request, res: Response) => {
+//     const languageTotals: Record<string, number> = {};
+//     const username = req.params.username;
+//     let starCount = 0;
+//     let totalForks = 0;
+//     let totalWatchers = 0;
+//     if (typeof username !== "string" || username.trim() === "") {
+//       return res.status(400).json({ error: "Invalid username" });
+//     }
 
-    const userData = await getUser(username);
-    const reposData = await getUserRepos(username);
-    const totalCommits = await getTotalCommits(username);
+//     const userData = await getUser(username);
+//     const reposData = await getUserRepos(username);
+//     const totalCommits = await getTotalCommits(username);
 
-    for (const repo of reposData) {
-      starCount += repo.stargazers_count;
-      totalForks += repo.forks_count;
-      totalWatchers += repo.watchers_count;
-      const languageData = await getLanguages(username, repo.name);
+//     for (const repo of reposData) {
+//       starCount += repo.stargazers_count;
+//       totalForks += repo.forks_count;
+//       totalWatchers += repo.watchers_count;
+//       const languageData = await getLanguages(username, repo.name);
 
-      for (const [language, bytes] of Object.entries(languageData)) {
-        languageTotals[language] =
-          (languageTotals[language] || 0) + Number(bytes);
-      }
-    }
+//       for (const [language, bytes] of Object.entries(languageData)) {
+//         languageTotals[language] =
+//           (languageTotals[language] || 0) + Number(bytes);
+//       }
+//     }
 
-    const totalBytes = Object.values(languageTotals).reduce(
-      (acc, bytes) => acc + bytes,
-      0,
-    );
+//     const totalBytes = Object.values(languageTotals).reduce(
+//       (acc, bytes) => acc + bytes,
+//       0,
+//     );
 
-    const languagePercentages = Object.fromEntries(
-      Object.entries(languageTotals).map(([language, bytes]) => [
-        language,
-        Number((bytes / totalBytes) * 100).toFixed(2),
-      ]),
-    );
-    res.json({
-      username: userData.login,
-      bio: userData.bio,
-      total_public_repos: userData.public_repos,
-      total_commits_last_30_days: totalCommits,
-      total_stars: starCount,
-      total_forks: totalForks,
-      total_watchers: totalWatchers,
-      languages: { ...languagePercentages },
-    });
-  },
-);
+//     const languagePercentages = Object.fromEntries(
+//       Object.entries(languageTotals).map(([language, bytes]) => [
+//         language,
+//         Number((bytes / totalBytes) * 100).toFixed(2),
+//       ]),
+//     );
+//     res.json({
+//       username: userData.login,
+//       bio: userData.bio,
+//       total_public_repos: userData.public_repos,
+//       total_commits_last_30_days: totalCommits,
+//       total_stars: starCount,
+//       total_forks: totalForks,
+//       total_watchers: totalWatchers,
+//       languages: { ...languagePercentages },
+//     });
+//   },
+// );
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

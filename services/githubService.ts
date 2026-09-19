@@ -18,7 +18,40 @@ async function githubFetch(endpoint: string) {
 }
 
 export async function getUser(username: string) {
-  return githubFetch(`/users/${username}`);
+  const exisitingUser = await db.orm.public.User.select(
+    "id",
+    "username",
+    "name",
+    "bio",
+    "followers",
+    "following",
+    "public_repos",
+    "account_created_at",
+    "email",
+  )
+    .where({
+      username: username,
+    })
+    .first();
+
+  if (exisitingUser) {
+    return exisitingUser;
+  }
+
+  const githubUser = await githubFetch(`/users/${username}`);
+
+  const newUser = await db.orm.public.User.create({
+    username: githubUser.login,
+    name: githubUser.name,
+    bio: githubUser.bio,
+    followers: githubUser.followers,
+    following: githubUser.following,
+    public_repos: githubUser.public_repos,
+    account_created_at: githubUser.created_at,
+    email: githubUser.email,
+  });
+  const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = newUser;
+  return userWithoutTimestamps;
 }
 
 export async function getUserRepos(username: string) {

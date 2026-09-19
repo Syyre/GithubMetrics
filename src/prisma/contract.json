@@ -18,14 +18,7 @@
               "CreatedAt": {
                 "nullable": false,
                 "type": {
-                  "codecId": "pg/timestamptz-temporal@1",
-                  "kind": "scalar"
-                }
-              },
-              "PublicRepos": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
+                  "codecId": "pg/timestamptz-string@1",
                   "kind": "scalar"
                 }
               },
@@ -33,6 +26,27 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "account_created_at": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "bio": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "email": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
                   "kind": "scalar"
                 }
               },
@@ -50,13 +64,6 @@
                   "kind": "scalar"
                 }
               },
-              "githubId": {
-                "nullable": false,
-                "type": {
-                  "codecId": "pg/int4@1",
-                  "kind": "scalar"
-                }
-              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -65,9 +72,16 @@
                 }
               },
               "name": {
-                "nullable": false,
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "public_repos": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
                   "kind": "scalar"
                 }
               },
@@ -85,11 +99,17 @@
                 "CreatedAt": {
                   "column": "CreatedAt"
                 },
-                "PublicRepos": {
-                  "column": "PublicRepos"
-                },
                 "UpdatedAt": {
                   "column": "UpdatedAt"
+                },
+                "account_created_at": {
+                  "column": "account_created_at"
+                },
+                "bio": {
+                  "column": "bio"
+                },
+                "email": {
+                  "column": "email"
                 },
                 "followers": {
                   "column": "followers"
@@ -97,14 +117,14 @@
                 "following": {
                   "column": "following"
                 },
-                "githubId": {
-                  "column": "githubId"
-                },
                 "id": {
                   "column": "id"
                 },
                 "name": {
                   "column": "name"
+                },
+                "public_repos": {
+                  "column": "public_repos"
                 },
                 "username": {
                   "column": "username"
@@ -126,7 +146,7 @@
             "user": {
               "columns": {
                 "CreatedAt": {
-                  "codecId": "pg/timestamptz-temporal@1",
+                  "codecId": "pg/timestamptz-string@1",
                   "default": {
                     "expression": "now()",
                     "kind": "function"
@@ -134,15 +154,25 @@
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
-                "PublicRepos": {
-                  "codecId": "pg/int4@1",
-                  "nativeType": "int4",
-                  "nullable": false
-                },
                 "UpdatedAt": {
                   "codecId": "pg/timestamptz-string@1",
                   "nativeType": "timestamptz",
                   "nullable": false
+                },
+                "account_created_at": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "bio": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "email": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "followers": {
                   "codecId": "pg/int4@1",
@@ -150,11 +180,6 @@
                   "nullable": false
                 },
                 "following": {
-                  "codecId": "pg/int4@1",
-                  "nativeType": "int4",
-                  "nullable": false
-                },
-                "githubId": {
                   "codecId": "pg/int4@1",
                   "nativeType": "int4",
                   "nullable": false
@@ -171,6 +196,11 @@
                 "name": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
+                  "nullable": true
+                },
+                "public_repos": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
                   "nullable": false
                 },
                 "username": {
@@ -189,11 +219,6 @@
               "uniques": [
                 {
                   "columns": [
-                    "githubId"
-                  ]
-                },
-                {
-                  "columns": [
                     "username"
                   ]
                 }
@@ -205,7 +230,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "be274cdee58ba629d31aeb09f4e5e038ad41f92a85bb21119389fb44366570e9"
+    "storageHash": "144e36780e54cd290b5fc8bc25176235df2148d33e16428f02910eb65fe98328"
   },
   "execution": {
     "executionHash": "1339cc9a6ab2eab45fe2c5a938e907ad163f5ca99a69a84f951b3ac25c7fe3af",

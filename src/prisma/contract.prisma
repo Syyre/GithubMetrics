@@ -2,13 +2,15 @@
 
 model User {
   id          Int      @id @default(autoincrement())
-  githubId    Int      @unique
   username    String   @unique
-  name        String
+  name        String?
+  bio         String?
   followers   Int
   following   Int
-  PublicRepos Int  
+  public_repos Int  
+  account_created_at  TimestamptzString
+  email       String?
 
-  CreatedAt Timestamptz @default(now())
+  CreatedAt   TimestamptzString @default(now())
   UpdatedAt temporal.updatedAtString()
 }
