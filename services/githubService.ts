@@ -1,5 +1,5 @@
 import "dotenv/config";
-
+import { db } from "../src/prisma/db";
 const GITHUB_API_BASE_URL = "https://api.github.com";
 
 async function githubFetch(endpoint: string) {
