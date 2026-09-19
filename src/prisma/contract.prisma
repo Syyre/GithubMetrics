@@ -11,6 +11,27 @@ model User {
   account_created_at  TimestamptzString
   email       String?
 
+  repositories Repository[]
+
+  CreatedAt   TimestamptzString @default(now())
+  UpdatedAt temporal.updatedAtString()
+}
+
+
+model Repository {
+  id          Int      @id @default(autoincrement())
+ 
+  name        String
+  description String?
+  url         String
+  PrimaryLanguage    String?
+  stars       Int
+  forks       Int
+  repository_created_at  TimestamptzString
+  repository_updated_at  TimestamptzString
+  ownerId     Int
+  owner       User     @relation(fields: [ownerId], references: [id])
+
   CreatedAt   TimestamptzString @default(now())
   UpdatedAt temporal.updatedAtString()
 }
