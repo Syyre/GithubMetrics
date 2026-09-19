@@ -35,18 +35,7 @@ app.get("/api/github/:username/repos", async (req: Request, res: Response) => {
 
   const data = await getUserRepos(username);
 
-  const repos = data.map((repo: any) => ({
-    name: repo.name,
-    description: repo.description,
-    html_url: repo.html_url,
-    language: repo.language,
-    stargazers_count: repo.stargazers_count,
-    forks_count: repo.forks_count,
-    created_at: repo.created_at,
-    updated_at: repo.updated_at,
-  }));
-
-  res.json(repos);
+  res.json(data);
 });
 
 //metrics request

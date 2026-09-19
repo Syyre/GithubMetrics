@@ -237,6 +237,13 @@
                   "kind": "scalar"
                 }
               },
+              "repositoriesUpdatedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
               "username": {
                 "nullable": false,
                 "type": {
@@ -293,6 +300,9 @@
                 },
                 "public_repos": {
                   "column": "public_repos"
+                },
+                "repositoriesUpdatedAt": {
+                  "column": "repositoriesUpdatedAt"
                 },
                 "username": {
                   "column": "username"
@@ -477,6 +487,11 @@
                   "nativeType": "int4",
                   "nullable": false
                 },
+                "repositoriesUpdatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "username": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -504,7 +519,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "8d9645d61cc4088fefbc33af5463b43767ae1c30c6e063c49ba27490e3bcad3a"
+    "storageHash": "4d2af3ca97d12ff422e9c186e8dfd93cf482a037040889dea26bfc4abf4b6e01"
   },
   "execution": {
     "executionHash": "9191714dde200ca9d267ed2b2136a1d5f1f733b4848973e4f5c6a809118dbdb5",

@@ -10,6 +10,7 @@ model User {
   public_repos Int  
   account_created_at  TimestamptzString
   email       String?
+  repositoriesUpdatedAt TimestamptzString?
 
   repositories Repository[]
 

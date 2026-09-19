@@ -18,7 +18,12 @@ async function githubFetch(endpoint: string) {
 
   return response.json();
 }
-
+function stripTimestamps<T extends { CreatedAt: unknown; UpdatedAt: unknown }>(
+  row: T,
+) {
+  const { CreatedAt, UpdatedAt, ...rest } = row;
+  return rest;
+}
 export async function getUser(username: string) {
   const exisitingUser = await db.orm.public.User.where({
     username: username,
@@ -62,13 +67,53 @@ export async function getUser(username: string) {
     public_repos: githubUser.public_repos,
     account_created_at: githubUser.created_at,
     email: githubUser.email,
+    repositoriesUpdatedAt: null,
   });
   const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = newUser;
   return userWithoutTimestamps;
 }
 
 export async function getUserRepos(username: string) {
-  return githubFetch(`/users/${username}/repos`);
+  const user = await getUser(username);
+  const existingRepos = await db.orm.public.Repository.where({
+    ownerId: user!.id,
+  }).all();
+
+  const hourAgo = new Date(Date.now() - ONE_HOUR_IN_MS);
+
+  const needsRefresh =
+    user.repositoriesUpdatedAt === null ||
+    new Date(user.repositoriesUpdatedAt) < hourAgo;
+
+  if (existingRepos.length > 0 && !needsRefresh) {
+    return existingRepos.map(stripTimestamps);
+  }
+
+  // no repos, fetch from github and update db
+  const githubRepos = await githubFetch(`/users/${username}/repos`);
+
+  // Delete existing repos for the user
+  await db.orm.public.Repository.where({ ownerId: user!.id }).deleteAll();
+
+  const newRepos = await db.orm.public.Repository.createAll(
+    githubRepos.map((repo: any) => ({
+      name: repo.name,
+      description: repo.description,
+      url: repo.html_url,
+      PrimaryLanguage: repo.language,
+      stars: repo.stargazers_count,
+      forks: repo.forks_count,
+      repository_created_at: repo.created_at,
+      repository_updated_at: repo.updated_at,
+      ownerId: user!.id,
+    })),
+  );
+
+  await db.orm.public.User.where({ id: user!.id }).update({
+    repositoriesUpdatedAt: new Date().toISOString(),
+  });
+
+  return newRepos.map(stripTimestamps);
 }
 
 export async function getLanguages(owner: string, repo: string) {
