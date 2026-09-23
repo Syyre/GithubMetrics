@@ -195,6 +195,13 @@
                   "kind": "scalar"
                 }
               },
+              "commits_last_30_days": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
               "email": {
                 "nullable": true,
                 "type": {
@@ -282,6 +289,9 @@
                 },
                 "bio": {
                   "column": "bio"
+                },
+                "commits_last_30_days": {
+                  "column": "commits_last_30_days"
                 },
                 "email": {
                   "column": "email"
@@ -453,6 +463,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "commits_last_30_days": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
                 "email": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -519,7 +534,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "4d2af3ca97d12ff422e9c186e8dfd93cf482a037040889dea26bfc4abf4b6e01"
+    "storageHash": "222e2bda2a4414ba6a9f9f77a4a07cf3dff5097256ce55e4ced227a59d6b9826"
   },
   "execution": {
     "executionHash": "9191714dde200ca9d267ed2b2136a1d5f1f733b4848973e4f5c6a809118dbdb5",

@@ -51,6 +51,7 @@ export async function getUser(username: string) {
       public_repos: githubUser.public_repos,
       account_created_at: githubUser.created_at,
       email: githubUser.email,
+      commits_last_30_days: await getTotalCommits(username),
     });
     const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = updated!;
     return userWithoutTimestamps;
@@ -68,6 +69,7 @@ export async function getUser(username: string) {
     account_created_at: githubUser.created_at,
     email: githubUser.email,
     repositoriesUpdatedAt: null,
+    commits_last_30_days: await getTotalCommits(username),
   });
   const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = newUser;
   return userWithoutTimestamps;

@@ -7,7 +7,8 @@ model User {
   bio         String?
   followers   Int
   following   Int
-  public_repos Int  
+  public_repos Int
+  commits_last_30_days Int
   account_created_at  TimestamptzString
   email       String?
   repositoriesUpdatedAt TimestamptzString?
