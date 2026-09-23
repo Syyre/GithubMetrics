@@ -31,9 +31,25 @@ model Repository {
   forks       Int
   repository_created_at  TimestamptzString
   repository_updated_at  TimestamptzString
+  languages   RepositoryLanguage[]
   ownerId     Int
   owner       User     @relation(fields: [ownerId], references: [id])
 
   CreatedAt   TimestamptzString @default(now())
   UpdatedAt temporal.updatedAtString()
+}
+
+model RepositoryLanguage {
+  // id          Int      @id @default(autoincrement())
+  language     String   
+  bytes      Int
+  // repositories Repository[]
+  repositoryId Int
+
+  repository   Repository @relation(fields: [repositoryId], references: [id])
+
+  CreatedAt   TimestamptzString @default(now())
+  UpdatedAt temporal.updatedAtString()
+
+  @@id([language, repositoryId])
 }

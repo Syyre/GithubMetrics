@@ -8,6 +8,10 @@
       "model": "Repository",
       "namespace": "public"
     },
+    "repositoryLanguage": {
+      "model": "RepositoryLanguage",
+      "namespace": "public"
+    },
     "user": {
       "model": "User",
       "namespace": "public"
@@ -105,6 +109,21 @@
               }
             },
             "relations": {
+              "languages": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "repositoryId"
+                  ]
+                },
+                "to": {
+                  "model": "RepositoryLanguage",
+                  "namespace": "public"
+                }
+              },
               "owner": {
                 "cardinality": "N:1",
                 "nullable": false,
@@ -163,6 +182,84 @@
               },
               "namespaceId": "public",
               "table": "repository"
+            }
+          },
+          "RepositoryLanguage": {
+            "fields": {
+              "CreatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "UpdatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "kind": "scalar"
+                }
+              },
+              "bytes": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              },
+              "language": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "repositoryId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int4@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "repository": {
+                "cardinality": "N:1",
+                "nullable": false,
+                "on": {
+                  "localFields": [
+                    "repositoryId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Repository",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "CreatedAt": {
+                  "column": "CreatedAt"
+                },
+                "UpdatedAt": {
+                  "column": "UpdatedAt"
+                },
+                "bytes": {
+                  "column": "bytes"
+                },
+                "language": {
+                  "column": "language"
+                },
+                "repositoryId": {
+                  "column": "repositoryId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "repositoryLanguage"
             }
           },
           "User": {
@@ -437,6 +534,74 @@
               },
               "uniques": []
             },
+            "repositoryLanguage": {
+              "columns": {
+                "CreatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "UpdatedAt": {
+                  "codecId": "pg/timestamptz-string@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "bytes": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                },
+                "language": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "repositoryId": {
+                  "codecId": "pg/int4@1",
+                  "nativeType": "int4",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "repositoryId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repositoryLanguage"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "repository"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "repositoryId"
+                  ],
+                  "name": "repositoryLanguage_repositoryId_idx_dce7a8ba",
+                  "prefix": "repositoryLanguage_repositoryId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "language",
+                  "repositoryId"
+                ]
+              },
+              "uniques": []
+            },
             "user": {
               "columns": {
                 "CreatedAt": {
@@ -534,10 +699,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "222e2bda2a4414ba6a9f9f77a4a07cf3dff5097256ce55e4ced227a59d6b9826"
+    "storageHash": "c0cab8f1ce9d6f9b2066ab6347d514e48c6ce334d39691f963bb1fc06d2b2e03"
   },
   "execution": {
-    "executionHash": "9191714dde200ca9d267ed2b2136a1d5f1f733b4848973e4f5c6a809118dbdb5",
+    "executionHash": "539e85c3c73571c2ddf843883c5f094ea6d807a2466b96088b2c47195d2b271b",
     "mutations": {
       "defaults": [
         {
@@ -553,6 +718,21 @@
             "column": "UpdatedAt",
             "namespace": "public",
             "table": "repository"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "UpdatedAt",
+            "namespace": "public",
+            "table": "repositoryLanguage"
           }
         },
         {

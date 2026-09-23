@@ -29,6 +29,8 @@ export async function getUser(username: string) {
     username: username,
   }).first();
 
+  const commits = await getTotalCommits(username);
+
   if (exisitingUser) {
     const lastUpdated = new Date(exisitingUser.UpdatedAt).getTime();
     const isOld = Date.now() - lastUpdated > ONE_HOUR_IN_MS;
@@ -51,7 +53,7 @@ export async function getUser(username: string) {
       public_repos: githubUser.public_repos,
       account_created_at: githubUser.created_at,
       email: githubUser.email,
-      commits_last_30_days: await getTotalCommits(username),
+      commits_last_30_days: commits,
     });
     const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = updated!;
     return userWithoutTimestamps;
@@ -69,7 +71,7 @@ export async function getUser(username: string) {
     account_created_at: githubUser.created_at,
     email: githubUser.email,
     repositoriesUpdatedAt: null,
-    commits_last_30_days: await getTotalCommits(username),
+    commits_last_30_days: commits,
   });
   const { CreatedAt, UpdatedAt, ...userWithoutTimestamps } = newUser;
   return userWithoutTimestamps;
@@ -79,7 +81,9 @@ export async function getUserRepos(username: string) {
   const user = await getUser(username);
   const existingRepos = await db.orm.public.Repository.where({
     ownerId: user!.id,
-  }).all();
+  })
+    .include("languages")
+    .all();
 
   const hourAgo = new Date(Date.now() - ONE_HOUR_IN_MS);
 
@@ -88,7 +92,7 @@ export async function getUserRepos(username: string) {
     new Date(user.repositoriesUpdatedAt) < hourAgo;
 
   if (existingRepos.length > 0 && !needsRefresh) {
-    return existingRepos.map(stripTimestamps);
+    return existingRepos.map(stripRepoTimestamps);
   }
 
   // no repos, fetch from github and update db
@@ -97,25 +101,45 @@ export async function getUserRepos(username: string) {
   // Delete existing repos for the user
   await db.orm.public.Repository.where({ ownerId: user!.id }).deleteAll();
 
-  const newRepos = await db.orm.public.Repository.createAll(
-    githubRepos.map((repo: any) => ({
-      name: repo.name,
-      description: repo.description,
-      url: repo.html_url,
-      PrimaryLanguage: repo.language,
-      stars: repo.stargazers_count,
-      forks: repo.forks_count,
-      repository_created_at: repo.created_at,
-      repository_updated_at: repo.updated_at,
-      ownerId: user!.id,
-    })),
+  const newRepos = await Promise.all(
+    githubRepos.map(async (repo: any) => {
+      const languageBytes = await githubFetch(
+        `/repos/${username}/${repo.name}/languages`,
+      );
+      console.log(`Languages for ${repo.name}:`, languageBytes);
+
+      const languageEntries = Object.entries(languageBytes).map(
+        ([language, bytes]) => ({
+          language,
+          bytes: bytes as number,
+        }),
+      );
+      console.log(`Language entries for ${repo.name}:`, languageEntries);
+
+      return db.orm.public.Repository.create({
+        name: repo.name,
+        description: repo.description,
+        url: repo.html_url,
+        PrimaryLanguage: repo.language,
+        stars: repo.stargazers_count,
+        forks: repo.forks_count,
+        repository_created_at: repo.created_at,
+        repository_updated_at: repo.updated_at,
+        ownerId: user.id,
+        languages: (languages) => languages.create(languageEntries),
+      });
+    }),
   );
 
   await db.orm.public.User.where({ id: user!.id }).update({
     repositoriesUpdatedAt: new Date().toISOString(),
   });
-
-  return newRepos.map(stripTimestamps);
+  const reposWithLanguages = await db.orm.public.Repository.where({
+    ownerId: user.id,
+  })
+    .include("languages")
+    .all();
+  return reposWithLanguages.map(stripRepoTimestamps);
 }
 
 export async function getLanguages(owner: string, repo: string) {
@@ -124,11 +148,22 @@ export async function getLanguages(owner: string, repo: string) {
 
 export async function getTotalCommits(username: string) {
   const since = new Date();
-  since.setDate(since.getDate() - 30); // 30 days ago
-  const sinceStr = since.toISOString().split("T")[0]; // Format as YYYY-MM-DD
+  since.setDate(since.getDate() - 30);
+  const sinceStr = since.toISOString().split("T")[0];
   const query = `author:${username} author-date:>=${sinceStr}`;
   const data = await githubFetch(
     `/search/commits?q=${encodeURIComponent(query)}`,
   );
   return data.total_count;
+}
+
+function stripRepoTimestamps(repo: any) {
+  const { CreatedAt, UpdatedAt, languages, ...rest } = repo;
+  return {
+    ...rest,
+    languages: languages?.map((lang: any) => {
+      const { CreatedAt, UpdatedAt, ...langRest } = lang;
+      return langRest;
+    }),
+  };
 }
